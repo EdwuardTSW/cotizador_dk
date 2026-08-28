@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>DK Proyects — Cotizador (Móvil)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    :root{
+      --bg:#0b0b0c; --card:#151517; --fg:#f5f6f8; --muted:#a2a6ad; --ring:#26272b; --accent:#00dc82;
+      --danger:#ef4444; --ink:#0f1115;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:720px;margin:0 auto;padding:14px 14px calc(88px + env(safe-area-inset-bottom))}
+    .top{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+    .logo{width:56px;height:56px;border-radius:14px;border:1px dashed var(--ring);display:flex;align-items:center;justify-content:center;overflow:hidden;background:#0e0f12}
+    .logo img{max-width:100%;max-height:100%;display:none}
+    h1{font-size:22px;margin:0;font-weight:800;letter-spacing:-.02em}
+    .sub{color:var(--muted);font-size:12px;margin-top:2px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .col{flex:1 1 100%}
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:12px;margin-bottom:12px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 6px}
+    input,select,textarea{
+      width:100%;background:#0e0f12;color:var(--fg);border:1px solid var(--ring);border-radius:12px;
+      padding:12px 14px;font-size:16px;outline:none
+    }
+    textarea{resize:vertical}
+    .hint{font-size:12px;color:var(--muted)}
+    .btn{appearance:none;border-radius:12px;border:1px solid var(--accent);background:var(--accent);color:#04110a;
+         padding:12px 14px;font-weight:700;cursor:pointer;touch-action:manipulation;font-size:16px}
+    .btn.ghost{background:transparent;color:var(--fg);border-color:var(--ring)}
+    .btn.red{background:var(--danger);border-color:var(--danger);color:#fff}
+    .chip{display:inline-block;background:#0e0f12;border:1px solid var(--ring);color:var(--muted);padding:6px 10px;border-radius:999px;font-size:12px}
+    .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .kpi{display:flex;justify-content:space-between;align-items:center;background:#0e0f12;border:1px solid var(--ring);border-radius:14px;padding:10px 12px}
+    .kpi .label{font-size:12px;color:var(--muted)} .kpi .value{font-size:18px;font-weight:800}
+    .product{background:#0e0f12;border:1px solid var(--ring);border-radius:16px;padding:12px;margin-top:8px}
+    .product .row .col{flex:1 1 48%}
+    .product .row .col.full{flex-basis:100%}
+    .product-list{display:grid;gap:8px;margin-top:14px}
+    .product-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:#0e0f12;border:1px solid var(--ring);border-radius:12px;padding:10px 12px}
+    .product-entry-name{font-weight:700;overflow-wrap:anywhere}
+    .product-entry-meta{color:var(--muted);font-size:12px;margin-top:3px;overflow-wrap:anywhere}
+    .product-entry-total{text-align:right;font-weight:800;white-space:nowrap}
+    .product-entry-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px}
+    .product-entry-actions .btn{font-size:13px;padding:8px 10px}
+    .del{display:flex;justify-content:flex-end}
+    .sticky-bar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(11,11,12,0.0),rgba(11,11,12,0.8) 14px,var(--ink) 14px);padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--ring)}
+    .sticky-inner{max-width:720px;margin:0 auto;display:flex;gap:8px}
+    .sticky-inner .btn{flex:1;min-width:0}
+    .whatsapp{white-space:pre-wrap;background:#0e0f12;border:1px dashed var(--ring);border-radius:12px;padding:12px;font-size:14px}
+    .toggle{display:flex;align-items:center;gap:8px}
+    .toggle input{width:20px;height:20px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid4{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (min-width:560px){ .grid4{grid-template-columns:repeat(4,1fr)} }
+    .title{font-size:16px;font-weight:800}
+    .muted{color:var(--muted);font-size:12px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="logo"><img id="logoPreview" alt="logo"></div>
+      <div>
+        <h1 id="brandTitle">DK Proyects</h1>
+        <div class="sub">Cotizador móvil — Productos y servicios</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="title">Ajustes de marca</div>
+      <label>Nombre de la marca</label>
+      <input id="marca" value="DK Proyects" placeholder="Nombre de la marca">
+      <label>Logo de la marca</label>
+      <div class="stack" style="justify-content:space-between">
+        <div class="stack">
+          <input id="logoUrl" placeholder="Pega URL del logo (PNG/JPG)" style="min-width:220px" />
+          <button class="btn ghost" id="btnLoadUrl">Cargar URL</button>
+          <label class="btn ghost" for="logoFile">Subir logo<input type="file" id="logoFile" accept="image/*" hidden></label>
+        </div>
+        <span class="chip">Marca de agua en PDF</span>
+      </div>
+    </div>
+
+    <!-- Datos -->
+    <div class="card">
+      <div class="title">Datos de la cotización</div>
+      <div class="grid2" style="margin-top:6px">
+        <div>
+          <label>Folio</label><input id="folio" placeholder="C-0001">
+          <div class="hint" style="margin-top:5px">Avanza al generar el PDF.</div>
+        </div>
+        <div>
+          <label>Fecha</label><input id="fecha" type="date">
+        </div>
+      </div>
+      <label>Cliente</label><input id="cliente" placeholder="Nombre del cliente">
+      <div class="toggle" style="margin-top:8px">
+        <input id="reqEnvio" type="checkbox" checked>
+        <div class="muted">¿Requiere envío (nacional)? Si es compra local, desmárcalo.</div>
+      </div>
+      <div id="envioBox" style="margin-top:8px">
+        <div class="grid2">
+          <div><label>Origen</label><input id="origen" value="Mérida, Yucatán"></div>
+          <div><label>Destino</label><input id="destino"></div>
+        </div>
+        <div class="grid2">
+          <div><label>Paquetería</label><input id="paqueteria" placeholder="Estafeta / DHL / FedEx"></div>
+          <div><label>Paquetes</label><input id="paquetes" type="number" min="0" value="1"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ajustes -->
+    <div class="card">
+      <div class="title">Ajustes de precio</div>
+      <div class="grid2" style="margin-top:6px">
+        <div><label>Descuento (%)</label><input id="descuento" type="number" min="0" max="100" value="0"></div>
+        <div><label>Promoción ($)</label><input id="promocion" type="number" min="0" value="0"></div>
+        <div><label>Envío ($)</label><input id="envio" type="number" min="0" value="0"></div>
+        <div><label>Impuestos extra ($)</label><input id="impExtra" type="number" min="0" value="0"></div>
+        <div><label>IVA (%)</label><input id="iva" type="number" min="0" max="100" value="16"></div>
+      </div>
+      <div class="kpi" style="margin-top:8px"><div class="label">Total (estimado)</div><div class="value" id="kpiTotal">$0.00</div></div>
+    </div>
+
+    <!-- Productos -->
+    <div class="card">
+      <div class="title">Productos</div>
+      <div id="productEditorMount"></div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn ghost" id="addItem">+ Añadir producto</button>
+        <button class="btn ghost" id="cancelEdit" style="display:none">Cancelar edición</button>
+      </div>
+      <div id="products"></div>
+    </div>
+
+    <!-- Personalizar -->
+    <div class="card">
+      <div class="title">Personalizar (PDF y WhatsApp)</div>
+      <div class="grid4" style="margin-top:6px">
+        <label class="toggle"><input type="checkbox" id="showDesc" checked> Descuento</label>
+        <label class="toggle"><input type="checkbox" id="showPromo" checked> Promoción</label>
+        <label class="toggle"><input type="checkbox" id="showEnvio" checked> Envío</label>
+        <label class="toggle"><input type="checkbox" id="showImpExtra" checked> Impuestos extra</label>
+      </div>
+      <div class="muted" style="margin-top:6px">Al desmarcar, se ocultan esas líneas en el PDF y en el mensaje de WhatsApp (los cálculos no cambian).</div>
+    </div>
+
+    <!-- Notas -->
+    <div class="card">
+      <label>Notas</label>
+      <textarea id="notas" rows="3">Tiempo de entrega sujeto a paquetería. Precios incluyen IVA salvo indicación.</textarea>
+    </div>
+
+    <!-- WhatsApp -->
+    <div class="card">
+      <div class="title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Mensaje para WhatsApp</span>
+        <button class="btn ghost" id="copyWa">Copiar texto</button>
+      </div>
+      <div id="wa" class="whatsapp" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <!-- Sticky actions -->
+  <div class="sticky-bar">
+    <div class="sticky-inner">
+      <button class="btn ghost" id="previewPdf">Vista previa PDF</button>
+      <button class="btn" id="genPdf">Generar PDF</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const { jsPDF } = window.jspdf;
+  const fmt = n => (isNaN(n)?0:n).toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2});
+  const today = new Date().toISOString().slice(0,10);
+  const $ = (id)=>document.getElementById(id);
+  const brandStorageKey = 'cotizador-brand-settings';
+  const folioStorageKey = 'cotizador-next-folio';
+
+  const state = {
+    logoDataUrl: null,
+    editingItemIndex: null,
+    items: [
+      {producto:'Playera personalizada', tipo:'Oversize', talla:'M', otroTipo:'', descripcion:'Diseño de catálogo', unitario:200, cantidad:1},
+    ]
+  };
+
+  // init
+  window.addEventListener('DOMContentLoaded',()=>{
+    if($('fecha')) $('fecha').value=today;
+    loadBrandSettings();
+    loadFolio();
+    updateBrand();
+    renderProducts();
+    applyEnvioVisibility();
+    recalc();
+    updateWhatsApp();
+  });
+
+  function brandName(){ return txt('marca') || 'DK Proyects'; }
+  function updateBrand(){
+    const name = brandName();
+    $('brandTitle').textContent = name;
+    logoPreview.alt = `Logo de ${name}`;
+    document.title = `${name} — Cotizador (Móvil)`;
+  }
+
+  function loadBrandSettings(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(brandStorageKey) || '{}');
+      if(typeof saved.name === 'string' && saved.name.trim()){
+        $('marca').value = saved.name === 'DK Élite' ? 'DK Proyects' : saved.name;
+      }
+      if(typeof saved.logoDataUrl === 'string' && saved.logoDataUrl.startsWith('data:image/')){
+        state.logoDataUrl = saved.logoDataUrl;
+        logoPreview.src = saved.logoDataUrl;
+        logoPreview.style.display = 'block';
+      }
+    }catch{}
+  }
+
+  function saveBrandSettings(){
+    try{
+      localStorage.setItem(brandStorageKey, JSON.stringify({
+        name: brandName(),
+        logoDataUrl: state.logoDataUrl
+      }));
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  function loadFolio(){
+    try{
+      $('folio').value = localStorage.getItem(folioStorageKey) || 'C-0001';
+    }catch{
+      $('folio').value = 'C-0001';
+    }
+  }
+
+  function saveFolio(){
+    try{ localStorage.setItem(folioStorageKey, txt('folio') || 'C-0001'); }catch{}
+  }
+
+  function advanceFolio(){
+    const current = txt('folio') || 'C-0001';
+    const match = current.match(/^(.*?)(\d+)$/);
+    const next = match
+      ? `${match[1]}${String(Number(match[2]) + 1).padStart(match[2].length, '0')}`
+      : `${current}-0001`;
+    $('folio').value = next;
+    saveFolio();
+    updateWhatsApp();
+  }
+
+  // Logo
+  const logoPreview = $('logoPreview');
+  $('logoFile').addEventListener('change', (e)=>{
+    const f=e.target.files?.[0]; if(!f) return;
+    const fr=new FileReader();
+    fr.onload=()=>{
+      state.logoDataUrl=String(fr.result);
+      if(logoPreview){ logoPreview.src=state.logoDataUrl; logoPreview.style.display='block'; }
+      if(!saveBrandSettings()) alert('El logo se cargó, pero el navegador no pudo guardarlo permanentemente. Intenta usar una imagen más pequeña.');
+    };
+    fr.readAsDataURL(f);
+  });
+  $('btnLoadUrl').addEventListener('click', async ()=>{
+    const url=($('logoUrl')?.value||'').trim(); if(!url) return;
+    try{
+      const res=await fetch(url,{mode:'cors'}); if(!res.ok) throw new Error('bad');
+      const blob=await res.blob(); const fr=new FileReader();
+      fr.onload=()=>{
+        state.logoDataUrl=String(fr.result);
+        logoPreview.src=state.logoDataUrl;
+        logoPreview.style.display='block';
+        if(!saveBrandSettings()) alert('El logo se cargó, pero el navegador no pudo guardarlo permanentemente. Intenta usar una imagen más pequeña.');
+      };
+      fr.readAsDataURL(blob);
+    }catch{ alert('No se pudo cargar el logo desde la URL. Intenta subir el archivo.'); }
+  });
+
+  // Shipping toggle
+  $('reqEnvio').addEventListener('change', applyEnvioVisibility);
+  function applyEnvioVisibility(){
+    const on = $('reqEnvio').checked;
+    $('envioBox').style.display = on ? '' : 'none';
+    if(!on){ $('envio').value='0'; }
+    recalc(); updateWhatsApp();
+  }
+
+  // Product editor and saved rows
+  function escapeHtml(value){
+    return String(value ?? '').replace(/[&<>'"]/g, char=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
+    })[char]);
+  }
+
+  function renderProducts(){
+    const c = $('products');
+    const editing = state.editingItemIndex !== null;
+    const draft = editing ? state.items[state.editingItemIndex] : {
+      producto:'', tipo:'Regular', talla:'M', otroTipo:'', descripcion:'', unitario:0, cantidad:1
+    };
+    const types=['Regular','Oversize','Unisex','Infantil','Slim','Adicional','Otro'];
+    const sizes=['No aplica','XS','S','M','L','XL','2XL','3XL'];
+    const rows = state.items.length ? state.items.map((it, i)=>{
+      const type = it.tipo==='Otro' && it.otroTipo ? it.otroTipo : (it.tipo||'—');
+      const size = it.talla && it.talla!=='No aplica' ? ` · Talla ${it.talla}` : '';
+      const description = it.descripcion ? ` · ${it.descripcion}` : '';
+      const subtotal = (Number(it.unitario)||0)*(Number(it.cantidad)||0);
+      return `
+        <div class="product-entry">
+          <div>
+            <div class="product-entry-name">${escapeHtml(it.producto||'(producto)')}</div>
+            <div class="product-entry-meta">${escapeHtml(type)}${escapeHtml(size)}${escapeHtml(description)} · Cant. ${Number(it.cantidad)||0}</div>
+          </div>
+          <div class="product-entry-total">${fmt(subtotal)}</div>
+          <div class="product-entry-actions">
+            <button class="btn ghost" data-edit="${i}">Editar</button>
+            <button class="btn red" data-del="${i}">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('') : '<div class="muted">Todavía no hay productos agregados.</div>';
+
+    $('productEditorMount').innerHTML = `
+      <div class="product" id="productEditor">
+        <div class="title">${editing?'Editar producto':'Nuevo producto'}</div>
+        <div class="row">
+          <div class="col full">
+            <label>Producto</label>
+            <input id="itemProducto" value="${escapeHtml(draft.producto)}" placeholder="Ej. Playera, diseño o servicio">
+          </div>
+          <div class="col">
+            <label>Tipo</label>
+            <select id="itemTipo">
+              ${types.map(opt=>`<option value="${opt}" ${opt===draft.tipo?'selected':''}>${opt}</option>`).join('')}
+            </select>
+          </div>
+          <div class="col" data-size-box style="${draft.tipo==='Adicional'?'display:none':''}">
+            <label>Talla (opcional)</label>
+            <select id="itemTalla" ${draft.tipo==='Adicional'?'disabled':''}>
+              ${sizes.map(opt=>`<option value="${opt}" ${opt===draft.talla?'selected':''}>${opt}</option>`).join('')}
+            </select>
+          </div>
+          <div class="col full" data-other-type-box style="${draft.tipo==='Otro'?'':'display:none'}">
+            <label>Otro tipo</label>
+            <input id="itemOtroTipo" value="${escapeHtml(draft.otroTipo)}" placeholder="Especifica el tipo" ${draft.tipo==='Otro'?'':'disabled'}>
+          </div>
+          <div class="col full">
+            <label>Descripción</label>
+            <input id="itemDescripcion" value="${escapeHtml(draft.descripcion)}" placeholder="Color, diseño...">
+          </div>
+          <div class="col">
+            <label>Precio unitario</label>
+            <input id="itemUnitario" type="number" min="0" step="0.01" value="${Number(draft.unitario)||0}">
+          </div>
+          <div class="col">
+            <label>Cantidad</label>
+            <input id="itemCantidad" type="number" min="1" step="1" value="${Number(draft.cantidad)||1}">
+          </div>
+        </div>
+      </div>`;
+    c.innerHTML = `
+      <div class="product-list">
+        <div class="title">Productos agregados (${state.items.length})</div>
+        ${rows}
+      </div>`;
+
+    $('addItem').textContent = editing ? 'Guardar cambios' : '+ Añadir producto';
+    $('cancelEdit').style.display = editing ? '' : 'none';
+    $('itemTipo').addEventListener('change', updateProductEditorFields);
+  }
+
+  function updateProductEditorFields(){
+    const additional = $('itemTipo').value==='Adicional';
+    const other = $('itemTipo').value==='Otro';
+    const sizeBox = $('itemTalla').closest('[data-size-box]');
+    const otherBox = $('itemOtroTipo').closest('[data-other-type-box]');
+    sizeBox.style.display = additional ? 'none' : '';
+    $('itemTalla').disabled = additional;
+    if(additional) $('itemTalla').value='No aplica';
+    otherBox.style.display = other ? '' : 'none';
+    $('itemOtroTipo').disabled = !other;
+    if(!other) $('itemOtroTipo').value='';
+  }
+
+  $('addItem').addEventListener('click', ()=>{
+    const producto=txt('itemProducto');
+    if(!producto){ alert('Escribe el nombre del producto.'); $('itemProducto').focus(); return; }
+    const tipo=$('itemTipo').value;
+    const item={
+      producto,
+      tipo,
+      talla:tipo==='Adicional' ? 'No aplica' : $('itemTalla').value,
+      otroTipo:tipo==='Otro' ? txt('itemOtroTipo') : '',
+      descripcion:txt('itemDescripcion'),
+      unitario:Math.max(0, num('itemUnitario')),
+      cantidad:Math.max(1, Math.floor(num('itemCantidad')))
+    };
+    if(state.editingItemIndex===null) state.items.push(item);
+    else state.items[state.editingItemIndex]=item;
+    state.editingItemIndex=null;
+    renderProducts(); recalc(); updateWhatsApp();
+  });
+
+  $('cancelEdit').addEventListener('click', ()=>{ state.editingItemIndex=null; renderProducts(); });
+  $('products').addEventListener('click', (e)=>{
+    const edit=e.target.closest('[data-edit]');
+    const del=e.target.closest('[data-del]');
+    if(edit){
+      state.editingItemIndex=Number(edit.dataset.edit);
+      renderProducts();
+      $('productEditor').scrollIntoView({behavior:'smooth',block:'start'});
+    }else if(del){
+      const index=Number(del.dataset.del);
+      state.items.splice(index,1);
+      if(state.editingItemIndex===index) state.editingItemIndex=null;
+      else if(state.editingItemIndex!==null && state.editingItemIndex>index) state.editingItemIndex--;
+      renderProducts(); recalc(); updateWhatsApp();
+    }
+  });
+
+  // Personalización afecta WA y PDF
+  ['showDesc','showPromo','showEnvio','showImpExtra','descuento','promocion','envio','impExtra','iva','notas','cliente','folio','fecha','origen','destino','paqueteria','paquetes']
+  .forEach(id=>{ const el=$(id); if(el){ el.addEventListener('input', ()=>{ updateBrand(); recalc(); updateWhatsApp(); }); el.addEventListener('change', ()=>{ updateBrand(); recalc(); updateWhatsApp(); }); } });
+
+  $('marca').addEventListener('input', ()=>{ updateBrand(); saveBrandSettings(); updateWhatsApp(); });
+  $('marca').addEventListener('change', ()=>{ updateBrand(); saveBrandSettings(); updateWhatsApp(); });
+  $('folio').addEventListener('input', saveFolio);
+  $('folio').addEventListener('change', saveFolio);
+
+  function num(id){ return Number($(id)?.value||0)||0; }
+  function txt(id){ return ($(id)?.value||'').trim(); }
+
+  function recalc(){
+    const sub = state.items.reduce((s,it)=> s + (Number(it.unitario)||0)*(Number(it.cantidad)||0), 0);
+    const descuentoPct = Math.max(0, Math.min(100, num('descuento')));
+    const promocion = Math.max(0, num('promocion'));
+    const impExtra = Math.max(0, num('impExtra'));
+    const ivaPct = Math.max(0, Math.min(100, num('iva')));
+    const req = $('reqEnvio').checked;
+    const envio = req ? Math.max(0, num('envio')) : 0;
+    const d1 = sub * (descuentoPct/100);
+    const base = Math.max(0, sub - d1 - promocion);
+    const baseConExtras = base + envio + impExtra;
+    const iva = baseConExtras * ivaPct/100;
+    const tot = baseConExtras + iva;
+    const kpi = $('kpiTotal'); if(kpi) kpi.textContent = fmt(tot);
+  }
+
+  function buildWhatsApp(){
+    const marca = brandName();
+    const cliente = txt('cliente')||'(pendiente)';
+    const req = $('reqEnvio').checked;
+    const origen=txt('origen')||'—', destino=txt('destino')||'(pendiente)', paqueteria=txt('paqueteria')||'(por definir)', paquetes=txt('paquetes')||'0';
+    const notas = txt('notas');
+
+    const sub = state.items.reduce((s,it)=> s + (Number(it.unitario)||0)*(Number(it.cantidad)||0), 0);
+    const descuentoPct = Math.max(0, Math.min(100, num('descuento')));
+    const promocion = Math.max(0, num('promocion'));
+    const impExtra = Math.max(0, num('impExtra'));
+    const ivaPct = Math.max(0, Math.min(100, num('iva')));
+    const envio = req ? Math.max(0, num('envio')) : 0;
+    const d1 = sub * (descuentoPct/100);
+    const base = Math.max(0, sub - d1 - promocion);
+    const baseConExtras = base + envio + impExtra;
+    const iva = baseConExtras * ivaPct/100;
+    const tot = baseConExtras + iva;
+
+    const prods = state.items.length
+      ? state.items.map(p => `• ${p.producto || '(producto)'} [${p.tipo==='Otro'&&p.otroTipo? p.otroTipo : p.tipo}${p.talla && p.talla!=='No aplica'? ', Talla '+p.talla:''}] x${p.cantidad||0} — ${fmt(p.unitario||0)} c/u`).join('\n')
+      : '(pendiente)';
+
+    const envioHeader = req ? `✈️ Origen: ${origen} | 📍 Destino: ${destino}\n🚚 Paquetería: ${paqueteria} | 📦 Paquetes: ${paquetes}` : `🛍️ *Compra local (sin envío)*`;
+
+    const showDesc = $('showDesc').checked !== false;
+    const showPromo = $('showPromo').checked !== false;
+    const showEnvio = $('showEnvio').checked !== false;
+    const showImpExtra = $('showImpExtra').checked !== false;
+
+    const lines = [];
+    lines.push(`💰 Subtotal: ${fmt(sub)}`);
+    if (showDesc) lines.push(`🏷️ Descuento (${descuentoPct}%): -${fmt(d1)}`);
+    if (showPromo) lines.push(`🎁 Promoción: -${fmt(promocion)}`);
+    if (showEnvio && req) lines.push(`➕ Envío: ${fmt(envio)}`);
+    if (showImpExtra) lines.push(`➕ Impuestos extra: ${fmt(impExtra)}`);
+    lines.push(`🧾 IVA (${ivaPct}%): ${fmt(iva)}`);
+    lines.push(`✅ Total: ${fmt(tot)}`);
+
+    return `📦 *Cotización ${marca}*\n\n👤 Cliente: ${cliente}\n${envioHeader}\n\n🧺 *Productos:*\n${prods}\n\n${lines.join('\n')}\n\n📝 ${notas}`;
+  }
+
+  function updateWhatsApp(){
+    const wa = $('wa'); if(wa) wa.textContent = buildWhatsApp();
+  }
+
+  $('copyWa').addEventListener('click', async ()=>{
+    const t = $('wa')?.textContent || '';
+    try{
+      await navigator.clipboard.writeText(t);
+      const b=$('copyWa'); const old=b.textContent; b.textContent='¡Copiado!'; setTimeout(()=>b.textContent=old, 1200);
+    }catch{
+      const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      const b=$('copyWa'); const old=b.textContent; b.textContent='¡Copiado!'; setTimeout(()=>b.textContent=old, 1200);
+    }
+  });
+
+  // PDF helpers
+  async function makeWatermark(logoDataUrl, scale = 0.9, alpha = 0.08){
+    return new Promise((resolve)=>{
+      const img=new Image();
+      img.onload=()=>{
+        const maxSide=1000, w=img.width, h=img.height;
+        const ratio=Math.min(maxSide/w, maxSide/h)*scale;
+        const cw=Math.max(200, Math.floor(w*ratio)), ch=Math.max(200, Math.floor(h*ratio));
+        const c=document.createElement('canvas'); c.width=cw; c.height=ch;
+        const ctx=c.getContext('2d'); ctx.clearRect(0,0,cw,ch); ctx.globalAlpha=Math.max(0.02, Math.min(alpha, 0.25));
+        ctx.drawImage(img,0,0,cw,ch); resolve(c.toDataURL('image/png'));
+      };
+      img.src=logoDataUrl;
+    });
+  }
+
+  function buildPdf(doc){
+    const m=14; let y=14;
+    const marca=brandName();
+    const req=$('reqEnvio').checked;
+    const sub = state.items.reduce((s,it)=> s + (Number(it.unitario)||0)*(Number(it.cantidad)||0), 0);
+    const descuentoPct = Math.max(0, Math.min(100, num('descuento')));
+    const promocion = Math.max(0, num('promocion'));
+    const impExtra = Math.max(0, num('impExtra'));
+    const ivaPct = Math.max(0, Math.min(100, num('iva')));
+    const envio = req ? Math.max(0, num('envio')) : 0;
+    const d1 = sub * (descuentoPct/100);
+    const base = Math.max(0, sub - d1 - promocion);
+    const baseMasCargos = base + envio + impExtra;
+    const iva = baseMasCargos * ivaPct/100;
+    const tot = baseMasCargos + iva;
+
+    // Watermark
+    if(state.logoDataUrl){
+      // drawn later in async flow by caller when ready
+    } else {
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      doc.setTextColor(230,230,230);
+      let watermarkSize=72;
+      doc.setFontSize(watermarkSize);
+      const watermarkText=marca.toUpperCase();
+      const watermarkWidth=doc.getTextWidth(watermarkText);
+      if(watermarkWidth > pageW*0.8){
+        watermarkSize *= (pageW*0.8)/watermarkWidth;
+        doc.setFontSize(watermarkSize);
+      }
+      doc.text(watermarkText, pageW/2, pageH/2, { align:'center', angle:-30 });
+      doc.setTextColor(0,0,0);
+    }
+
+    // Header
+    if(state.logoDataUrl){ try{ doc.addImage(state.logoDataUrl,'PNG',m,y,26,26,'','FAST'); }catch{} }
+    doc.setFont('helvetica','bold'); doc.setFontSize(20);
+    doc.text(marca, m + (state.logoDataUrl?32:0), y+12);
+
+    const rightX = doc.internal.pageSize.getWidth()-m;
+    const folio=( $('folio')?.value || '' ).trim() || '—';
+    const fecha = $('fecha')?.value || today;
+    const cliente = ( $('cliente')?.value || '' ).trim() || '—';
+    doc.setFontSize(12); doc.text('Detalles', rightX, y, {align:'right'});
+    doc.setFont('helvetica','normal');
+    doc.text(`Folio: ${folio}`, rightX, y+6, {align:'right'});
+    doc.text(`Fecha: ${fecha}`, rightX, y+12, {align:'right'});
+    doc.text(`Cliente: ${cliente}`, rightX, y+18, {align:'right'});
+
+    // Envío
+    y += 36;
+    if(req){
+      const origen = ( $('origen')?.value || '—' ).trim();
+      const destino = ( $('destino')?.value || '—' ).trim();
+      const paq = ( $('paqueteria')?.value || '—' ).trim();
+      const packs = Number($('paquetes')?.value||0)||0;
+      doc.setFont('helvetica','bold'); doc.text('Información del envío', m, y);
+      doc.setFont('helvetica','normal'); y+=6;
+      doc.text(`Origen: ${origen}`, m, y); y+=5;
+      doc.text(`Destino: ${destino}`, m, y); y+=5;
+      doc.text(`Paquetería: ${paq}    Paquetes: ${packs}`, m, y);
+    } else {
+      doc.setFont('helvetica','bold'); doc.text('Compra local (sin envío)', m, y);
+    }
+
+    // Items table
+    const rows = state.items.map(it=>[
+      it.producto||'—',
+      (it.tipo==='Otro'&&it.otroTipo)? it.otroTipo : (it.tipo||'—'),
+      it.talla && it.talla!=='No aplica' ? it.talla : '—',
+      it.descripcion||'—',
+      (Number(it.unitario)||0).toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2}),
+      String(Number(it.cantidad)||0),
+      ((Number(it.unitario)||0)*(Number(it.cantidad)||0)).toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2}),
+    ]);
+    doc.autoTable({
+      startY: y+8,
+      head: [["Producto","Tipo","Talla","Descripción","Unitario","Cant.","Subtotal"]],
+      body: rows,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [0,0,0] },
+      columnStyles: {4:{halign:'right'},5:{halign:'right'},6:{halign:'right'}},
+      margin: { left: m, right: m },
+    });
+    let yy = doc.lastAutoTable.finalY + 8;
+
+    // Summary (respect toggles)
+    const showDesc = $('showDesc').checked !== false;
+    const showPromo = $('showPromo').checked !== false;
+    const showEnvio = $('showEnvio').checked !== false;
+    const showImpExtra = $('showImpExtra').checked !== false;
+    const summary = [];
+    summary.push(['Subtotal', sub.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2})]);
+    if(showDesc){ summary.push([`Descuento (${descuentoPct}%)`, `- ${d1.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2})}`]); }
+    if(showPromo){ summary.push(['Promoción', `- ${promocion.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2})}`]); }
+    if(showEnvio){ summary.push(['Envío', envio.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2})]); }
+    if(showImpExtra){ summary.push(['Impuestos extra', impExtra.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2})]); }
+    summary.push([`IVA (${ivaPct}%)`, iva.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2})]);
+    summary.push(['TOTAL', tot.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2})]);
+    doc.autoTable({
+      startY: yy,
+      head: [["Concepto","Importe"]],
+      body: summary,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [0,0,0] },
+      columnStyles: {1:{halign:'right'}},
+      margin: { left: m, right: m },
+      didParseCell: (d)=>{ if(d.row.index===summary.length-1) d.cell.styles.fontStyle='bold'; }
+    });
+    yy = doc.lastAutoTable.finalY + 8;
+
+    // Notes
+    doc.setFont('helvetica','bold'); doc.text('Notas', m, yy); yy+=6; doc.setFont('helvetica','normal');
+    const notas = txt('notas');
+    doc.text(doc.splitTextToSize(notas, doc.internal.pageSize.getWidth()-m*2), m, yy);
+
+    const raw=( $('cliente')?.value || 'cotizacion').trim().replace(/\s+/g,'_');
+    doc.save(`Cotizacion_${raw}.pdf`);
+  }
+
+  $('previewPdf').addEventListener('click', async ()=>{
+    const doc = new jsPDF({unit:'mm',format:'a4'});
+    if(state.logoDataUrl){
+      try{
+        const wm = await makeWatermark(state.logoDataUrl, 0.9, 0.08);
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const imgW = pageW * 0.65, imgH = imgW;
+        doc.addImage(wm,'PNG',(pageW-imgW)/2,(pageH-imgH)/2,imgW,imgH,'','FAST');
+      }catch{}
+    }
+    buildPdf(doc);
+  });
+  $('genPdf').addEventListener('click', async ()=>{
+    const doc = new jsPDF({unit:'mm',format:'a4'});
+    if(state.logoDataUrl){
+      try{
+        const wm = await makeWatermark(state.logoDataUrl, 0.9, 0.08);
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const imgW = pageW * 0.65, imgH = imgW;
+        doc.addImage(wm,'PNG',(pageW-imgW)/2,(pageH-imgH)/2,imgW,imgH,'','FAST');
+      }catch{}
+    }
+    buildPdf(doc);
+    advanceFolio();
+  });
+
+})();
+</script>
+</body>
+</html>
